@@ -12,7 +12,71 @@ import 'package:flame/parallax.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
+
+class ResetButton extends PositionComponent with TapCallbacks {
+  final VoidCallback onPressed;
+  late SpriteComponent _buttonSprite;
+
+  ResetButton({required this.onPressed, super.size});
+
+  @override
+  FutureOr<void> onLoad() async {
+    anchor = Anchor.center;
+
+    try {
+      final buttonSprite = await Sprite.load(
+        "gameover.png",
+        images: Images(prefix: "assets/flappybird/sprites/"),
+      );
+      _buttonSprite = SpriteComponent(
+        sprite: buttonSprite,
+        size: size, // Use the provided size
+      );
+      _buttonSprite.anchor = Anchor.center;
+      add(_buttonSprite);
+    } catch (e) {
+      print("Error loading gameover.png: $e");
+      // Fallback: create a colored rectangle
+      add(
+        RectangleComponent(
+          size: size,
+          paint: Paint()..color = const Color(0xFFFF0000),
+        ),
+      );
+      add(
+        TextComponent(
+          text: "RESTART",
+          textRenderer: TextPaint(
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          anchor: Anchor.center,
+        ),
+      );
+    }
+
+    return super.onLoad();
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    print("Reset button tapped!"); // Debug print
+    onPressed();
+    super.onTapDown(event);
+  }
+
+  @override
+  bool containsLocalPoint(Vector2 point) {
+    // Make sure the entire button area is tappable
+    return point.x >= -size.x / 2 &&
+        point.x <= size.x / 2 &&
+        point.y >= -size.y / 2 &&
+        point.y <= size.y / 2;
+  }
+}
 
 class BonusZone extends PositionComponent with CollisionCallbacks {
   BonusZone({super.size});
@@ -49,7 +113,9 @@ class Player extends SpriteAnimationComponent with CollisionCallbacks {
 
   @override
   void onCollisionStart(
-      Set<Vector2> intersectionPoints, PositionComponent other) {
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is PipeComponent) {
       FlameAudio.play("hit.wav");
@@ -65,8 +131,8 @@ class PipeComponent extends PositionComponent with CollisionCallbacks {
   @override
   FutureOr<void> onLoad() async {
     final nineBox = NineTileBox(
-        await Sprite.load("pipe-green.png", images: images))
-      ..setGrid(leftWidth: 10, rightWidth: 10, topHeight: 60, bottomHeight: 60);
+      await Sprite.load("pipe-green.png", images: images),
+    )..setGrid(leftWidth: 10, rightWidth: 10, topHeight: 60, bottomHeight: 60);
     final spriteCom = NineTileBoxComponent(nineTileBox: nineBox, size: size);
     if (isUpsideDown) {
       spriteCom.flipVerticallyAroundCenter();
@@ -86,6 +152,8 @@ class FlappyBirdGame extends FlameGame
   var gameSpeed = 90.0;
   final pipeFullSize = Vector2(52.0, 520.0);
   late PositionComponent _pipeLayer;
+  late ResetButton _resetButton;
+  bool _showResetButton = false;
 
   @override
   FutureOr<void> onLoad() async {
@@ -95,6 +163,7 @@ class FlappyBirdGame extends FlameGame
     await setupBg();
     await setupBird();
     await setupScoreLabel();
+    await setupResetButton();
 
     resetGame();
     return super.onLoad();
@@ -103,28 +172,26 @@ class FlappyBirdGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
-    updateBird(dt);
-    updatePipes(dt);
-    updateScoreLabel();
-    if (_birdComponent.isDead) {
-      FlameAudio.play("die.wav");
-      gameOver();
+
+    if (!_birdComponent.isDead) {
+      updateBird(dt);
+      updatePipes(dt);
+      updateScoreLabel();
+    } else if (!_showResetButton) {
+      // Show reset button when bird dies
+      _showResetButton = true;
+      _resetButton.position = Vector2(size.x * 0.5, size.y * 0.5);
+      add(_resetButton);
     }
   }
 
-  // @override
-  // void onTap() {
-  //   super.onTap();
-  //   FlameAudio.play("swoosh.wav");
-  //   _birdYVelocity = -120;
-  // }
-
   @override
   void onTapDown(TapDownEvent event) {
-    // TODO: implement onTapDown
+    if (!_birdComponent.isDead) {
+      FlameAudio.play("swoosh.wav");
+      _birdYVelocity = -120;
+    }
     super.onTapDown(event);
-    FlameAudio.play("swoosh.wav");
-    _birdYVelocity = -120;
   }
 
   @override
@@ -135,20 +202,24 @@ class FlappyBirdGame extends FlameGame
 
   setupBg() async {
     final bgComponent = await loadParallaxComponent(
-        [ParallaxImageData("background-day.png")],
-        baseVelocity: Vector2(5, 0), images: images);
+      [ParallaxImageData("background-day.png")],
+      baseVelocity: Vector2(5, 0),
+      images: images,
+    );
     add(bgComponent);
 
     _pipeLayer = PositionComponent();
     add(_pipeLayer);
 
     final bottomBgComponent = await loadParallaxComponent(
-        [ParallaxImageData("base.png")],
-        baseVelocity: Vector2(gameSpeed, 0),
-        images: images,
-        alignment: Alignment.bottomLeft,
-        repeat: ImageRepeat.repeatX,
-        fill: LayerFill.none);
+      [ParallaxImageData("base.png")],
+      baseVelocity: Vector2(gameSpeed, 0),
+      images: images,
+      alignment: Alignment.bottomLeft,
+      repeat: ImageRepeat.repeatX,
+      fill: LayerFill.none,
+      position: Vector2(0, 80),
+    );
     add(bottomBgComponent);
   }
 
@@ -160,7 +231,7 @@ class FlappyBirdGame extends FlameGame
     List<Sprite> redBirdSprites = [
       await Sprite.load("redbird-downflap.png", images: images),
       await Sprite.load("redbird-midflap.png", images: images),
-      await Sprite.load("redbird-upflap.png", images: images)
+      await Sprite.load("redbird-upflap.png", images: images),
     ];
     final anim = SpriteAnimation.spriteList(redBirdSprites, stepTime: 0.2);
     _birdComponent = Player(animation: anim);
@@ -205,11 +276,19 @@ class FlappyBirdGame extends FlameGame
     for (int i = 0; i < numCount; ++i) {
       int num = int.parse(scoreStr[i]);
       imgComposition.add(
-          _numSprites[num], Vector2(offset, _numSprites[num].size.y));
+        _numSprites[num],
+        Vector2(offset, _numSprites[num].size.y),
+      );
       offset += _numSprites[num].size.x;
     }
     final img = await imgComposition.compose();
     _scoreComponent.sprite = Sprite(img);
+  }
+
+  // reset button
+  setupResetButton() async {
+    _resetButton = ResetButton(onPressed: resetGame, size: Vector2(150, 60));
+    _resetButton.anchor = Anchor.center;
   }
 
   // pipe
@@ -224,8 +303,11 @@ class FlappyBirdGame extends FlameGame
     var lastPipePos = _pipes.lastOrNull?.position.x ?? size.x - pipeSpace;
     lastPipePos += pipeSpace;
 
-    final gapCenterPos = min(gapMaxRandomRange,
-                size.y - minPipeHeight * 2 - baseHeight - gapHeight) *
+    final gapCenterPos =
+        min(
+              gapMaxRandomRange,
+              size.y - minPipeHeight * 2 - baseHeight - gapHeight,
+            ) *
             Random().nextDouble() +
         minPipeHeight +
         gapHeight * 0.5;
@@ -233,7 +315,9 @@ class FlappyBirdGame extends FlameGame
     PipeComponent topPipe =
         PipeComponent(images: images, isUpsideDown: true, size: pipeFullSize)
           ..position = Vector2(
-              lastPipePos, (gapCenterPos - gapHeight * 0.5) - pipeFullSize.y);
+            lastPipePos,
+            (gapCenterPos - gapHeight * 0.5) - pipeFullSize.y,
+          );
     _pipeLayer.add(topPipe);
     _pipes.add(topPipe);
 
@@ -252,12 +336,16 @@ class FlappyBirdGame extends FlameGame
 
   updatePipes(double dt) {
     for (final pipe in _pipes) {
-      pipe.position =
-          Vector2(pipe.position.x - dt * gameSpeed, pipe.position.y);
+      pipe.position = Vector2(
+        pipe.position.x - dt * gameSpeed,
+        pipe.position.y,
+      );
     }
     for (final bonusZone in _bonusZones) {
-      bonusZone.position =
-          Vector2(bonusZone.position.x - dt * gameSpeed, bonusZone.position.y);
+      bonusZone.position = Vector2(
+        bonusZone.position.x - dt * gameSpeed,
+        bonusZone.position.y,
+      );
     }
     _pipes.removeWhere((element) {
       final remove = element.position.x < -100;
@@ -280,20 +368,31 @@ class FlappyBirdGame extends FlameGame
   }
 
   gameOver() {
-    FlameAudio.play("die.wav");
-    resetGame();
+    if (!_birdComponent.isDead) {
+      FlameAudio.play("die.wav");
+      _birdComponent.isDead = true;
+    }
   }
 
   resetGame() {
+    // Remove reset button
+    if (_showResetButton) {
+      _resetButton.removeFromParent();
+      _showResetButton = false;
+    }
+
     _birdComponent.isDead = false;
     _birdComponent.score = 0;
     _birdComponent.position = Vector2(size.x * 0.3, size.y * 0.5);
     _birdYVelocity = 0.0;
+
+    // Clear pipes
     for (var element in _pipes) {
       element.removeFromParent();
     }
     _pipes.clear();
 
+    // Clear bonus zones
     for (var element in _bonusZones) {
       element.removeFromParent();
     }

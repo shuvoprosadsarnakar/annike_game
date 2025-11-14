@@ -1,4 +1,4 @@
-import 'package:annike_game/screen/flappybird/flappybird_page.dart';
+import 'package:annike_game/screen/game_page.dart';
 import 'package:flutter/material.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute<void>(
-                    builder: (context) => const FlappyBirdPage(),
+                    builder: (context) => const GamePage(),
                   ),
                 );
               },

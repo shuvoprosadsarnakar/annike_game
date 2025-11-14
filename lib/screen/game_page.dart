@@ -1,20 +1,20 @@
+import 'package:annike_game/screen/snake/snake_game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import 'flappybird_game.dart';
+import 'flappybird/flappybird_game.dart';
 
-class FlappyBirdPage extends StatefulWidget {
-  const FlappyBirdPage({super.key});
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
 
   @override
   State<StatefulWidget> createState() => _FlappyBirdGameState();
 }
 
-class _FlappyBirdGameState extends State<FlappyBirdPage> {
+class _FlappyBirdGameState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: null,
       body: Stack(
         children: [
           Row(
@@ -24,16 +24,12 @@ class _FlappyBirdGameState extends State<FlappyBirdPage> {
                   gameFactory: FlappyBirdGame.new,
                 ),
               ),
-              Expanded(
-                child: const GameWidget.controlled(
-                  gameFactory: FlappyBirdGame.new,
-                ),
-              ),
+              Expanded(child: SnakeGame()),
             ],
           ),
           Positioned(
             left: 16,
-            top: 60,
+            top: 16,
             child: IconButton(
               onPressed: () {
                 Navigator.of(context).pop();
