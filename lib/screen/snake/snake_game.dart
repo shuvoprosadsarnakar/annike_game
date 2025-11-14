@@ -13,8 +13,8 @@ class SnakeGame extends StatefulWidget {
 }
 
 class _SnakeGameState extends State<SnakeGame> {
-  final int squaresPerRow = 25;
-  final int squaresPerCol = 25;
+  final int squaresPerRow = 20;
+  final int squaresPerCol = 20;
   final fontStyle = TextStyle(color: Colors.white, fontSize: 20);
   final randomGen = Random();
 
@@ -25,6 +25,7 @@ class _SnakeGameState extends State<SnakeGame> {
   var food = [0, 2];
   Direction direction = Direction.up;
   var isPlaying = false;
+  Timer? _gameTimer;
 
   void startGame() {
     const duration = Duration(milliseconds: 300);
@@ -37,9 +38,11 @@ class _SnakeGameState extends State<SnakeGame> {
     snake.add([snake.first[0], snake.first[1] + 1]); // Snake body
 
     createFood();
-
+    direction = Direction.up;
     isPlaying = true;
-    Timer.periodic(duration, (Timer timer) {
+
+    _gameTimer?.cancel();
+    _gameTimer = Timer.periodic(duration, (Timer timer) {
       moveSnake();
       if (checkGameOver()) {
         timer.cancel();
@@ -50,23 +53,38 @@ class _SnakeGameState extends State<SnakeGame> {
 
   void moveSnake() {
     setState(() {
+      int newX = snake.first[0];
+      int newY = snake.first[1];
+
       switch (direction) {
         case Direction.up:
-          snake.insert(0, [snake.first[0], snake.first[1] - 1]);
+          newY = snake.first[1] - 1;
           break;
-
         case Direction.down:
-          snake.insert(0, [snake.first[0], snake.first[1] + 1]);
+          newY = snake.first[1] + 1;
           break;
-
         case Direction.left:
-          snake.insert(0, [snake.first[0] - 1, snake.first[1]]);
+          newX = snake.first[0] - 1;
           break;
-
         case Direction.right:
-          snake.insert(0, [snake.first[0] + 1, snake.first[1]]);
+          newX = snake.first[0] + 1;
           break;
       }
+
+      // Phase through walls
+      if (newX < 0) {
+        newX = squaresPerRow - 1;
+      } else if (newX >= squaresPerRow) {
+        newX = 0;
+      }
+
+      if (newY < 0) {
+        newY = squaresPerCol - 1;
+      } else if (newY >= squaresPerCol) {
+        newY = 0;
+      }
+
+      snake.insert(0, [newX, newY]);
 
       if (snake.first[0] != food[0] || snake.first[1] != food[1]) {
         snake.removeLast();
@@ -77,18 +95,33 @@ class _SnakeGameState extends State<SnakeGame> {
   }
 
   void createFood() {
-    food = [randomGen.nextInt(squaresPerRow), randomGen.nextInt(squaresPerCol)];
+    // Make sure food doesn't spawn on snake
+    var newFood;
+    do {
+      newFood = [
+        randomGen.nextInt(squaresPerRow),
+        randomGen.nextInt(squaresPerCol),
+      ];
+    } while (_isPositionOnSnake(newFood));
+
+    food = newFood;
+  }
+
+  bool _isPositionOnSnake(List<int> position) {
+    for (var segment in snake) {
+      if (segment[0] == position[0] && segment[1] == position[1]) {
+        return true;
+      }
+    }
+    return false;
   }
 
   bool checkGameOver() {
-    if (!isPlaying ||
-        snake.first[1] < 0 ||
-        snake.first[1] >= squaresPerCol ||
-        snake.first[0] < 0 ||
-        snake.first[0] > squaresPerRow) {
+    if (!isPlaying) {
       return true;
     }
 
+    // Only check for self-collision, not wall collisions
     for (var i = 1; i < snake.length; ++i) {
       if (snake[i][0] == snake.first[0] && snake[i][1] == snake.first[1]) {
         return true;
@@ -99,116 +132,171 @@ class _SnakeGameState extends State<SnakeGame> {
   }
 
   void endGame() {
-    isPlaying = false;
+    setState(() {
+      isPlaying = false;
+    });
+    _gameTimer?.cancel();
+  }
+
+  void restartGame() {
+    setState(() {
+      isPlaying = false;
+    });
+    _gameTimer?.cancel();
+    startGame();
+  }
+
+  @override
+  void dispose() {
+    _gameTimer?.cancel();
+    super.dispose();
   }
 
   @override
   void initState() {
-    startGame();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF343434),
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+    return Container(
+      color: const Color(0xFF343434),
+      child: Column(
+        children: [
+          // Score display
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Score: ${snake.length - 2}',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
+                // ElevatedButton(
+                //   onPressed: restartGame,
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: isPlaying ? Colors.white : Colors.green,
+                //   ),
+                //   child: Text(
+                //     isPlaying ? 'Restart' : 'Start Game',
+                //     style: TextStyle(
+                //       color: isPlaying ? Colors.black : Colors.white,
+                //       fontSize: 16,
+                //     ),
+                //   ),
+                // ),
+                Text(
+                  'Score: ${snake.length - 2}',
+                  style: const TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ],
             ),
-            Expanded(
-              child: GestureDetector(
-                onVerticalDragUpdate: (details) {
-                  if (direction != Direction.up && details.delta.dy > 0) {
-                    direction = Direction.down;
-                  } else if (direction != Direction.down &&
-                      details.delta.dy < 0) {
-                    direction = Direction.up;
-                  }
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (direction != Direction.left && details.delta.dx > 0) {
-                    direction = Direction.right;
-                  } else if (direction != Direction.right &&
-                      details.delta.dx < 0) {
-                    direction = Direction.left;
-                  }
-                },
-                child: AspectRatio(
-                  // aspectRatio: squaresPerRow / (squaresPerCol + 5),
-                  aspectRatio: 1,
-                  child: GridView.builder(
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: squaresPerRow,
-                    ),
-                    itemCount: squaresPerRow * squaresPerCol,
-                    itemBuilder: (BuildContext context, int index) {
-                      var color;
-                      var x = index % squaresPerRow;
-                      var y = (index / squaresPerRow).floor();
+          ),
 
-                      bool isSnakeBody = false;
-                      for (var pos in snake) {
-                        if (pos[0] == x && pos[1] == y) {
-                          isSnakeBody = true;
-                          break;
-                        }
+          // Game board
+          Expanded(
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (details) {
+                      if (direction != Direction.up && details.delta.dy > 0) {
+                        direction = Direction.down;
+                      } else if (direction != Direction.down &&
+                          details.delta.dy < 0) {
+                        direction = Direction.up;
                       }
-
-                      if (snake.first[0] == x && snake.first[1] == y) {
-                        color = Colors.black;
-                      } else if (isSnakeBody) {
-                        color = Colors.black;
-                      } else if (food[0] == x && food[1] == y) {
-                        color = Colors.amber;
-                      } else {
-                        color = Colors.white60;
-                      }
-
-                      return Container(
-                        margin: EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      );
                     },
+                    onHorizontalDragUpdate: (details) {
+                      if (direction != Direction.left && details.delta.dx > 0) {
+                        direction = Direction.right;
+                      } else if (direction != Direction.right &&
+                          details.delta.dx < 0) {
+                        direction = Direction.left;
+                      }
+                    },
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: squaresPerRow,
+                      ),
+                      itemCount: squaresPerRow * squaresPerCol,
+                      itemBuilder: (BuildContext context, int index) {
+                        var color;
+                        var x = index % squaresPerRow;
+                        var y = (index / squaresPerRow).floor();
+
+                        bool isSnakeBody = false;
+                        for (var pos in snake) {
+                          if (pos[0] == x && pos[1] == y) {
+                            isSnakeBody = true;
+                            break;
+                          }
+                        }
+
+                        if (snake.first[0] == x && snake.first[1] == y) {
+                          color = Colors.black; // Snake head
+                        } else if (isSnakeBody) {
+                          color = Colors.black38; // Snake body
+                        } else if (food[0] == x && food[1] == y) {
+                          color = Colors.amber; // Food
+                        } else {
+                          color = Colors.white60; // Background
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
             ),
+          ),
 
-            ElevatedButton(
-              // color: isPlaying ? Colors.white : Colors.black,
-              child: Text(
-                isPlaying ? 'End' : 'Start',
-                style: TextStyle(
-                  color: isPlaying ? Colors.black87 : Colors.white,
-                  fontSize: 24,
+          // Game Over overlay
+          if (!isPlaying && snake.length > 2)
+            Expanded(
+              child: Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Game Over!',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      ElevatedButton(
+                        onPressed: restartGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 15,
+                          ),
+                        ),
+                        child: Text(
+                          'Play Again',
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              onPressed: () async {
-                if (isPlaying) {
-                  isPlaying = false;
-                } else {
-                  startGame();
-                }
-              },
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
