@@ -1,3 +1,4 @@
+import 'package:annike_game/screen/game_page.dart';
 import 'package:flutter/material.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -11,12 +12,35 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black38,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text('counter', style: Theme.of(context).textTheme.headlineMedium),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const GamePage(),
+                  ),
+                );
+              },
+              child: Container(
+                height: 75,
+                width: 200,
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    "Start",
+                    style: TextStyle(color: Colors.white, fontSize: 45),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
