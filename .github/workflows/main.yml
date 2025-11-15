@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  release:
+    types: [published]
 
 env:
   FLUTTER_VERSION: '3.35.7'
@@ -29,3 +31,14 @@ jobs:
 
     - name: Build APK
       run: flutter build apk --release
+
+    - name: Upload APK to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/app/outputs/flutter-apk/app-release.apk
+        asset_name: app-release-${{ github.event.release.tag_name }}.apk
+        asset_content_type: application/vnd.android.package-archive
+
