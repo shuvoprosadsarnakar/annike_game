@@ -50,4 +50,4 @@ jobs:
             
             Download the APK and install on your Android device.
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
