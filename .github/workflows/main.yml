@@ -33,12 +33,12 @@ jobs:
       run: flutter build apk --release
 
     - name: Upload APK to Release
+      if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Use PAT instead of GITHUB_TOKEN
       with:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: build/app/outputs/flutter-apk/app-release.apk
         asset_name: app-release-${{ github.event.release.tag_name }}.apk
         asset_content_type: application/vnd.android.package-archive
-
