@@ -12,6 +12,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black38,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -26,11 +27,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
               child: Container(
-                height: 50,
-                width: 180,
+                height: 75,
+                width: 200,
                 decoration: BoxDecoration(
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    "Start",
+                    style: TextStyle(color: Colors.white, fontSize: 45),
+                  ),
                 ),
               ),
             ),

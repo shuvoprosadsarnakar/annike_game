@@ -1,5 +1,8 @@
 import 'package:annike_game/screen/snake/snake_game.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+
+import 'flappybird/flappybird_game.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -16,12 +19,12 @@ class _FlappyBirdGameState extends State<GamePage> {
         children: [
           Row(
             children: [
-              // Expanded(
-              //   child: const GameWidget.controlled(
-              //     gameFactory: FlappyBirdGame.new,
-              //   ),
-              // ),
-              Expanded(child: Container(color: Colors.green)),
+              Expanded(
+                child: const GameWidget.controlled(
+                  gameFactory: FlappyBirdGame.new,
+                ),
+              ),
+              // Expanded(child: Container(color: Colors.green)),
               Expanded(child: SnakeGame()),
             ],
           ),

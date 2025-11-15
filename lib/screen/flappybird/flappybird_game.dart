@@ -18,45 +18,19 @@ class ResetButton extends PositionComponent with TapCallbacks {
   late SpriteComponent _buttonSprite;
 
   ResetButton({required this.onPressed, super.size});
-
   @override
   FutureOr<void> onLoad() async {
-    anchor = Anchor.center;
-
-    try {
-      final buttonSprite = await Sprite.load(
-        "gameover.png",
-        images: Images(prefix: "assets/flappybird/sprites/"),
-      );
-      _buttonSprite = SpriteComponent(
-        sprite: buttonSprite,
-        size: size, // Use the provided size
-      );
-      _buttonSprite.anchor = Anchor.center;
-      add(_buttonSprite);
-    } catch (e) {
-      print("Error loading gameover.png: $e");
-      // Fallback: create a colored rectangle
-      add(
-        RectangleComponent(
-          size: size,
-          paint: Paint()..color = const Color(0xFFFF0000),
-        ),
-      );
-      add(
-        TextComponent(
-          text: "RESTART",
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          anchor: Anchor.center,
-        ),
-      );
-    }
+    final buttonSprite = await Sprite.load(
+      "gameover.png",
+      images: Images(prefix: "assets/flappybird/sprites/"),
+    );
+    _buttonSprite = SpriteComponent(
+      sprite: buttonSprite,
+      size: Vector2(200, 50),
+      position: Vector2(size.x * 0.5, size.y * 0.5),
+    );
+    _buttonSprite.anchor = Anchor.center;
+    add(_buttonSprite);
 
     return super.onLoad();
   }
@@ -68,14 +42,14 @@ class ResetButton extends PositionComponent with TapCallbacks {
     super.onTapDown(event);
   }
 
-  @override
+  /*  @override
   bool containsLocalPoint(Vector2 point) {
     // Make sure the entire button area is tappable
     return point.x >= -size.x / 2 &&
         point.x <= size.x / 2 &&
         point.y >= -size.y / 2 &&
         point.y <= size.y / 2;
-  }
+  }*/
 }
 
 class BonusZone extends PositionComponent with CollisionCallbacks {
@@ -262,7 +236,7 @@ class FlappyBirdGame extends FlameGame
     }
 
     _scoreComponent = SpriteComponent()
-      ..position = Vector2(size.x * 0.5, 100)
+      ..position = Vector2(size.x * 0.9, 20)
       ..sprite = Sprite(_numSprites[0]);
     _scoreComponent.anchor = Anchor.center;
     add(_scoreComponent);
