@@ -35,7 +35,10 @@ class _SnakeGameState extends State<SnakeGame> {
       [(squaresPerRow / 2).floor(), (squaresPerCol / 2).floor()],
     ];
 
-    snake.add([snake.first[0], snake.first[1] + 1]); // Snake body
+    // Snake body - adding 3 segments to make total length 4
+    snake.add([snake.first[0], snake.first[1] + 1]);
+    snake.add([snake.first[0], snake.first[1] + 2]);
+    snake.add([snake.first[0], snake.first[1] + 3]);
 
     createFood();
     direction = Direction.up;
@@ -155,6 +158,7 @@ class _SnakeGameState extends State<SnakeGame> {
   @override
   void initState() {
     super.initState();
+    startGame();
   }
 
   @override
@@ -165,25 +169,12 @@ class _SnakeGameState extends State<SnakeGame> {
         children: [
           // Score display
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // ElevatedButton(
-                //   onPressed: restartGame,
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: isPlaying ? Colors.white : Colors.green,
-                //   ),
-                //   child: Text(
-                //     isPlaying ? 'Restart' : 'Start Game',
-                //     style: TextStyle(
-                //       color: isPlaying ? Colors.black : Colors.white,
-                //       fontSize: 16,
-                //     ),
-                //   ),
-                // ),
                 Text(
-                  'Score: ${snake.length - 2}',
+                  'Score: ${snake.length - 4}',
                   style: const TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ],
@@ -192,66 +183,64 @@ class _SnakeGameState extends State<SnakeGame> {
 
           // Game board
           Expanded(
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Container(
-                  margin: const EdgeInsets.all(20),
-                  child: GestureDetector(
-                    onVerticalDragUpdate: (details) {
-                      if (direction != Direction.up && details.delta.dy > 0) {
-                        direction = Direction.down;
-                      } else if (direction != Direction.down &&
-                          details.delta.dy < 0) {
-                        direction = Direction.up;
-                      }
-                    },
-                    onHorizontalDragUpdate: (details) {
-                      if (direction != Direction.left && details.delta.dx > 0) {
-                        direction = Direction.right;
-                      } else if (direction != Direction.right &&
-                          details.delta.dx < 0) {
-                        direction = Direction.left;
-                      }
-                    },
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: squaresPerRow,
-                      ),
-                      itemCount: squaresPerRow * squaresPerCol,
-                      itemBuilder: (BuildContext context, int index) {
-                        var color;
-                        var x = index % squaresPerRow;
-                        var y = (index / squaresPerRow).floor();
-
-                        bool isSnakeBody = false;
-                        for (var pos in snake) {
-                          if (pos[0] == x && pos[1] == y) {
-                            isSnakeBody = true;
-                            break;
-                          }
-                        }
-
-                        if (snake.first[0] == x && snake.first[1] == y) {
-                          color = Colors.black; // Snake head
-                        } else if (isSnakeBody) {
-                          color = Colors.black38; // Snake body
-                        } else if (food[0] == x && food[1] == y) {
-                          color = Colors.amber; // Food
-                        } else {
-                          color = Colors.white60; // Background
-                        }
-
-                        return Container(
-                          margin: const EdgeInsets.all(1),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        );
-                      },
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                child: GestureDetector(
+                  onVerticalDragUpdate: (details) {
+                    if (direction != Direction.up && details.delta.dy > 0) {
+                      direction = Direction.down;
+                    } else if (direction != Direction.down &&
+                        details.delta.dy < 0) {
+                      direction = Direction.up;
+                    }
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    if (direction != Direction.left && details.delta.dx > 0) {
+                      direction = Direction.right;
+                    } else if (direction != Direction.right &&
+                        details.delta.dx < 0) {
+                      direction = Direction.left;
+                    }
+                  },
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: squaresPerRow,
                     ),
+                    itemCount: squaresPerRow * squaresPerCol,
+                    itemBuilder: (BuildContext context, int index) {
+                      var color;
+                      var x = index % squaresPerRow;
+                      var y = (index / squaresPerRow).floor();
+
+                      bool isSnakeBody = false;
+                      for (var pos in snake) {
+                        if (pos[0] == x && pos[1] == y) {
+                          isSnakeBody = true;
+                          break;
+                        }
+                      }
+
+                      if (snake.first[0] == x && snake.first[1] == y) {
+                        color = Colors.black; // Snake head
+                      } else if (isSnakeBody) {
+                        color = Colors.black38; // Snake body
+                      } else if (food[0] == x && food[1] == y) {
+                        color = Colors.amber; // Food
+                      } else {
+                        color = Colors.white60; // Background
+                      }
+
+                      return Container(
+                        margin: const EdgeInsets.all(1),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -259,7 +248,7 @@ class _SnakeGameState extends State<SnakeGame> {
           ),
 
           // Game Over overlay
-          if (!isPlaying && snake.length > 2)
+          if (!isPlaying && snake.length > 4)
             Expanded(
               child: Container(
                 color: Colors.black54,
