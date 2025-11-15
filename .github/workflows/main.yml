@@ -1,44 +1,53 @@
-name: Flutter Android CI
+name: Flutter Release Build
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   release:
     types: [published]
 
 env:
   FLUTTER_VERSION: '3.35.7'
 
+permissions:
+  contents: write
+
 jobs:
-  android:
-    name: Flutter Android
+  build-and-release:
+    name: Build and Release APK
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        cache: true
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
-    - name: Get packages
-      run: flutter pub get
+      - name: Get packages
+        run: flutter pub get
 
-    - name: Build APK
-      run: flutter build apk --release
+      - name: Build APK
+        run: flutter build apk --release --verbose
 
-    - name: Upload APK to Release
-      if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Use PAT instead of GITHUB_TOKEN
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: build/app/outputs/flutter-apk/app-release.apk
-        asset_name: app-release-${{ github.event.release.tag_name }}.apk
-        asset_content_type: application/vnd.android.package-archive
+      - name: Verify APK exists
+        run: |
+          echo "Checking if APK was built:"
+          ls -la build/app/outputs/flutter-apk/
+          echo "APK file size:"
+          du -h build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          body: |
+            Flutter Android APK
+            
+            **Version:** ${{ github.event.release.tag_name }}
+            **Built:** ${{ github.event.release.published_at }}
+            
+            Download the APK and install on your Android device.
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
