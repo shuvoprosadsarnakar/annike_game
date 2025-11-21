@@ -1,6 +1,7 @@
 import 'package:annike_game/screen/home_page.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,12 +15,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(),
+    return ScreenUtilInit(
+      designSize: const Size(1280, 720),
+      minTextAdapt: true,
+      splitScreenMode: false,
+      builder: (_, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Game',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
+            textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+          ),
+          home: child,
+        );
+      },
+      child: const MyHomePage(),
     );
   }
 }

@@ -20,8 +20,11 @@ class _FlappyBirdGameState extends State<GamePage> {
           Row(
             children: [
               Expanded(
-                child: const GameWidget.controlled(
-                  gameFactory: FlappyBirdGame.new,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: const GameWidget.controlled(
+                    gameFactory: FlappyBirdGame.new,
+                  ),
                 ),
               ),
               // Expanded(child: Container(color: Colors.green)),

@@ -12,6 +12,7 @@ import 'package:flame/parallax.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ResetButton extends PositionComponent with TapCallbacks {
   final VoidCallback onPressed;
@@ -37,19 +38,10 @@ class ResetButton extends PositionComponent with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    print("Reset button tapped!"); // Debug print
+    print("Reset button tapped!");
     onPressed();
     super.onTapDown(event);
   }
-
-  /*  @override
-  bool containsLocalPoint(Vector2 point) {
-    // Make sure the entire button area is tappable
-    return point.x >= -size.x / 2 &&
-        point.x <= size.x / 2 &&
-        point.y >= -size.y / 2 &&
-        point.y <= size.y / 2;
-  }*/
 }
 
 class BonusZone extends PositionComponent with CollisionCallbacks {
@@ -120,8 +112,9 @@ class PipeComponent extends PositionComponent with CollisionCallbacks {
   }
 }
 
+// Add KeyboardEvents mixin to enable keyboard input
 class FlappyBirdGame extends FlameGame
-    with TapCallbacks, HasCollisionDetection {
+    with TapCallbacks, HasCollisionDetection, KeyboardEvents {
   final images = Images(prefix: "assets/flappybird/sprites/");
   var gameSpeed = 90.0;
   final pipeFullSize = Vector2(52.0, 520.0);
@@ -132,7 +125,6 @@ class FlappyBirdGame extends FlameGame
   @override
   FutureOr<void> onLoad() async {
     FlameAudio.updatePrefix("assets/flappybird/audios/");
-    // FlameAudio.bgm.play("wing.wav");
 
     await setupBg();
     await setupBird();
@@ -152,7 +144,6 @@ class FlappyBirdGame extends FlameGame
       updatePipes(dt);
       updateScoreLabel();
     } else if (!_showResetButton) {
-      // Show reset button when bird dies
       _showResetButton = true;
       _resetButton.position = Vector2(size.x * 0.5, size.y * 0.5);
       add(_resetButton);
@@ -166,6 +157,44 @@ class FlappyBirdGame extends FlameGame
       _birdYVelocity = -120;
     }
     super.onTapDown(event);
+  }
+
+  // Add keyboard event handler
+  @override
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    // Check if spacebar is pressed
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+      // Make bird jump if alive
+      if (!_birdComponent.isDead) {
+        FlameAudio.play("swoosh.wav");
+        _birdYVelocity = -120;
+      } else {
+        // Restart game if bird is dead
+        resetGame();
+      }
+      return KeyEventResult.handled;
+    }
+
+    // // Optional: Add arrow up key as alternative jump key
+    // if (event is KeyDownEvent &&
+    //     event.logicalKey == LogicalKeyboardKey.arrowUp) {
+    //   if (!_birdComponent.isDead) {
+    //     FlameAudio.play("swoosh.wav");
+    //     _birdYVelocity = -120;
+    //   }
+    //   return KeyEventResult.handled;
+    // }
+
+    // Optional: Press R to restart game
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyR) {
+      resetGame();
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -269,11 +298,11 @@ class FlappyBirdGame extends FlameGame
   final _pipes = [];
   final _bonusZones = [];
   createPipe() {
-    const pipeSpace = 220.0; // the space of two pipe group
-    const minPipeHeight = 120.0; // pipe min height
-    const gapHeight = 90.0; // the gap length of two pipe
-    const baseHeight = 112.0; // the bottom platform height
-    const gapMaxRandomRange = 300; // gap position max random range
+    const pipeSpace = 300.0;
+    const minPipeHeight = 120.0;
+    const gapHeight = 220.0;
+    const baseHeight = 112.0;
+    const gapMaxRandomRange = 300;
     var lastPipePos = _pipes.lastOrNull?.position.x ?? size.x - pipeSpace;
     lastPipePos += pipeSpace;
 
@@ -349,7 +378,6 @@ class FlappyBirdGame extends FlameGame
   }
 
   resetGame() {
-    // Remove reset button
     if (_showResetButton) {
       _resetButton.removeFromParent();
       _showResetButton = false;
@@ -360,13 +388,11 @@ class FlappyBirdGame extends FlameGame
     _birdComponent.position = Vector2(size.x * 0.3, size.y * 0.5);
     _birdYVelocity = 0.0;
 
-    // Clear pipes
     for (var element in _pipes) {
       element.removeFromParent();
     }
     _pipes.clear();
 
-    // Clear bonus zones
     for (var element in _bonusZones) {
       element.removeFromParent();
     }
