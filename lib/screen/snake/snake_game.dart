@@ -219,10 +219,6 @@ class _SnakeGameState extends State<SnakeGame> {
           direction = Direction.right;
         });
       }
-      // R to restart
-      else if (event.logicalKey == LogicalKeyboardKey.keyR) {
-        restartGame();
-      }
     }
   }
 
@@ -237,16 +233,20 @@ class _SnakeGameState extends State<SnakeGame> {
         child: Stack(
           children: [
             // Score display
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Score: ${snake.length - 4}',
-                    style: const TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                ],
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Score: ${snake.length - 4}',
+                      style: const TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ],
+                ),
               ),
             ),
 

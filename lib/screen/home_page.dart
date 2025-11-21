@@ -55,14 +55,14 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Container(
                 height: 75,
-                width: 200,
+                width: 300,
                 decoration: BoxDecoration(
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
                   child: Text(
-                    "Start",
+                    "How to play",
                     style: TextStyle(color: Colors.white, fontSize: 45),
                   ),
                 ),
