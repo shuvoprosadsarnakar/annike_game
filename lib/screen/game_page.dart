@@ -1,8 +1,8 @@
-import 'package:annike_game/screen/snake/snake_game.dart';
+import 'package:annike_game/screen/snake_game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import 'flappybird/flappybird_game.dart';
+import 'flappybird_game.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -19,6 +19,7 @@ class _FlappyBirdGameState extends State<GamePage> {
         children: [
           Row(
             children: [
+              Expanded(child: SnakeGame()),
               Expanded(
                 child: AspectRatio(
                   aspectRatio: 1,
@@ -28,17 +29,25 @@ class _FlappyBirdGameState extends State<GamePage> {
                 ),
               ),
               // Expanded(child: Container(color: Colors.green)),
-              Expanded(child: SnakeGame()),
             ],
           ),
           Positioned(
-            left: 16,
-            top: 16,
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.close, color: Colors.white),
+            right: 12,
+            bottom: 12,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                iconSize: 36,
+                padding: const EdgeInsets.all(12),
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.close, color: Colors.white),
+              ),
             ),
           ),
         ],

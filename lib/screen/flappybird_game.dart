@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 class ResetButton extends PositionComponent with TapCallbacks {
   final VoidCallback onPressed;
   late SpriteComponent _buttonSprite;
+  late SpriteComponent _buttonSprite2;
 
   ResetButton({required this.onPressed, super.size});
   @override
@@ -25,13 +26,28 @@ class ResetButton extends PositionComponent with TapCallbacks {
       "gameover.png",
       images: Images(prefix: "assets/flappybird/sprites/"),
     );
+    final buttonSprite2 = await Sprite.load(
+      "play-again.png",
+      images: Images(prefix: "assets/flappybird/sprites/"),
+    );
     _buttonSprite = SpriteComponent(
       sprite: buttonSprite,
       size: Vector2(200, 50),
       position: Vector2(size.x * 0.5, size.y * 0.5),
     );
+    _buttonSprite2 = SpriteComponent(
+      sprite: buttonSprite2,
+      size: Vector2(200, 50),
+      anchor: Anchor.center,
+      // ⬇ move it DOWN by 70 pixels
+      position: Vector2(size.x * 0.5, size.y * 0.5 + 70),
+    );
+
     _buttonSprite.anchor = Anchor.center;
+    _buttonSprite2.anchor = Anchor.center;
+
     add(_buttonSprite);
+    add(_buttonSprite2);
 
     return super.onLoad();
   }
