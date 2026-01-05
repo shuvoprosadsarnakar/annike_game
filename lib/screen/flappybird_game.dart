@@ -13,6 +13,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:annike_game/cubit/game_input_cubit.dart';
 
 class ResetButton extends PositionComponent with TapCallbacks {
   final VoidCallback onPressed;
@@ -116,17 +117,30 @@ class PipeComponent extends PositionComponent with CollisionCallbacks {
 
 // Add KeyboardEvents mixin to enable keyboard input
 class FlappyBirdGame extends FlameGame
-    with TapCallbacks, HasCollisionDetection, KeyboardEvents {
+    with TapCallbacks, HasCollisionDetection {
+  final GameInputCubit inputCubit;
+
+  FlappyBirdGame(this.inputCubit);
+
   final images = Images(prefix: "assets/flappybird/sprites/");
   var gameSpeed = 90.0;
   final pipeFullSize = Vector2(52.0, 520.0);
   late PositionComponent _pipeLayer;
   late ResetButton _resetButton;
   bool _showResetButton = false;
+  StreamSubscription? _inputSubscription;
 
   @override
   FutureOr<void> onLoad() async {
     FlameAudio.updatePrefix("assets/flappybird/audios/");
+
+    _inputSubscription = inputCubit.stream.listen((state) {
+      if (state is GameInputJump) {
+        _jumpOrRestart();
+      } else if (state is GameInputRestart) {
+        resetGame();
+      }
+    });
 
     await setupBg();
     await setupBird();
@@ -152,6 +166,15 @@ class FlappyBirdGame extends FlameGame
     }
   }
 
+  void _jumpOrRestart() {
+    if (!_birdComponent.isDead) {
+      FlameAudio.play("swoosh.wav");
+      _birdYVelocity = -120;
+    } else {
+      resetGame();
+    }
+  }
+
   @override
   void onTapDown(TapDownEvent event) {
     if (!_birdComponent.isDead) {
@@ -161,46 +184,9 @@ class FlappyBirdGame extends FlameGame
     super.onTapDown(event);
   }
 
-  // Add keyboard event handler
-  @override
-  KeyEventResult onKeyEvent(
-    KeyEvent event,
-    Set<LogicalKeyboardKey> keysPressed,
-  ) {
-    // Check if spacebar is pressed
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
-      // Make bird jump if alive
-      if (!_birdComponent.isDead) {
-        FlameAudio.play("swoosh.wav");
-        _birdYVelocity = -120;
-      } else {
-        // Restart game if bird is dead
-        resetGame();
-      }
-      return KeyEventResult.handled;
-    }
-
-    // // Optional: Add arrow up key as alternative jump key
-    // if (event is KeyDownEvent &&
-    //     event.logicalKey == LogicalKeyboardKey.arrowUp) {
-    //   if (!_birdComponent.isDead) {
-    //     FlameAudio.play("swoosh.wav");
-    //     _birdYVelocity = -120;
-    //   }
-    //   return KeyEventResult.handled;
-    // }
-
-    // Optional: Press R to restart game
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyR) {
-      resetGame();
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
-  }
-
   @override
   void onDispose() {
+    _inputSubscription?.cancel();
     super.onDispose();
     FlameAudio.bgm.stop();
   }

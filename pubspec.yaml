@@ -18,6 +18,8 @@ dependencies:
   flame_forge2d: ^0.19.2+1
   flame_audio: ^2.11.11
   flutter_screenutil: ^5.9.3
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.8
 
 dev_dependencies:
   flutter_test:

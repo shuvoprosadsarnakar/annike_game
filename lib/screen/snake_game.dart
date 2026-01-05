@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for keyboard events
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:annike_game/cubit/game_input_cubit.dart';
 
 enum Direction { up, down, left, right }
 
@@ -28,23 +29,15 @@ class _SnakeGameState extends State<SnakeGame> {
   var isPlaying = false;
   Timer? _gameTimer;
 
-  // Focus node for keyboard input
-  final FocusNode _focusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
     startGame();
-    // Request focus after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
   }
 
   @override
   void dispose() {
     _gameTimer?.cancel();
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -168,66 +161,30 @@ class _SnakeGameState extends State<SnakeGame> {
     });
     _gameTimer?.cancel();
     startGame();
-    // Request focus again after restart
-    _focusNode.requestFocus();
-  }
-
-  // Handle keyboard input
-  void _handleKeyEvent(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      // Arrow keys
-      if (event.logicalKey == LogicalKeyboardKey.arrowUp &&
-          direction != Direction.down) {
-        setState(() {
-          direction = Direction.up;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown &&
-          direction != Direction.up) {
-        setState(() {
-          direction = Direction.down;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft &&
-          direction != Direction.right) {
-        setState(() {
-          direction = Direction.left;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
-          direction != Direction.left) {
-        setState(() {
-          direction = Direction.right;
-        });
-      }
-      // WASD keys
-      else if (event.logicalKey == LogicalKeyboardKey.keyW &&
-          direction != Direction.down) {
-        setState(() {
-          direction = Direction.up;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.keyS &&
-          direction != Direction.up) {
-        setState(() {
-          direction = Direction.down;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
-          direction != Direction.right) {
-        setState(() {
-          direction = Direction.left;
-        });
-      } else if (event.logicalKey == LogicalKeyboardKey.keyD &&
-          direction != Direction.left) {
-        setState(() {
-          direction = Direction.right;
-        });
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
-      focusNode: _focusNode,
-      onKeyEvent: _handleKeyEvent,
-      autofocus: true,
+    return BlocListener<GameInputCubit, GameInputState>(
+      listener: (context, state) {
+        if (state is GameInputMove) {
+          final newDirection = state.direction;
+          if (newDirection == Direction.up && direction != Direction.down) {
+            setState(() => direction = Direction.up);
+          } else if (newDirection == Direction.down &&
+              direction != Direction.up) {
+            setState(() => direction = Direction.down);
+          } else if (newDirection == Direction.left &&
+              direction != Direction.right) {
+            setState(() => direction = Direction.left);
+          } else if (newDirection == Direction.right &&
+              direction != Direction.left) {
+            setState(() => direction = Direction.right);
+          }
+        } else if (state is GameInputRestart) {
+          restartGame();
+        }
+      },
       child: Container(
         color: const Color(0xFF343434),
         child: Stack(
@@ -282,8 +239,7 @@ class _SnakeGameState extends State<SnakeGame> {
                       }
                     },
                     onTap: () {
-                      // Request focus when user taps the game board
-                      _focusNode.requestFocus();
+                      // Focus handled by parent
                     },
                     child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
