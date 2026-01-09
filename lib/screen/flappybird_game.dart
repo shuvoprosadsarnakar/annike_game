@@ -12,7 +12,6 @@ import 'package:flame/parallax.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:annike_game/cubit/game_input_cubit.dart';
 
 class ResetButton extends PositionComponent with TapCallbacks {
@@ -133,6 +132,7 @@ class FlappyBirdGame extends FlameGame
   @override
   FutureOr<void> onLoad() async {
     FlameAudio.updatePrefix("assets/flappybird/audios/");
+    FlameAudio.bgm.play("background.m4a");
 
     _inputSubscription = inputCubit.stream.listen((state) {
       if (state is GameInputJump) {
