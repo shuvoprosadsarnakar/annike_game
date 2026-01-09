@@ -1,6 +1,8 @@
+import 'package:annike_game/cubit/game_input_cubit.dart';
 import 'package:annike_game/screen/home_page.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 Future<void> main() async {
@@ -30,7 +32,10 @@ class MyApp extends StatelessWidget {
           home: child,
         );
       },
-      child: const MyHomePage(),
+      child: BlocProvider(
+        create: (context) => GameInputCubit(),
+        child: const MyHomePage(),
+      ),
     );
   }
 }

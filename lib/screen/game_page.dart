@@ -15,90 +15,137 @@ class GamePage extends StatefulWidget {
 }
 
 class _FlappyBirdGameState extends State<GamePage> {
+  late FocusNode focusNode;
+
   @override
+  void initState() {
+    super.initState();
+
+    focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (focusNode.canRequestFocus) {
+        focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => GameInputCubit(),
-      child: Builder(
-        builder: (context) {
-          // Use a FocusNode to capture keyboard events at the screen level
-          final focusNode = FocusNode();
-          // Request focus immediately so we catch events
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (focusNode.canRequestFocus) {
-              focusNode.requestFocus();
+    return Scaffold(
+      body: KeyboardListener(
+        focusNode: focusNode,
+        autofocus: true,
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent) {
+            final cubit = context.read<GameInputCubit>();
+            if (event.logicalKey == LogicalKeyboardKey.space) {
+              if (cubit.state is GameInputGameOver) {
+                Navigator.of(context).pop();
+                return;
+              }
+              cubit.jump();
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
+                event.logicalKey == LogicalKeyboardKey.keyW) {
+              cubit.move(Direction.up);
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                event.logicalKey == LogicalKeyboardKey.keyS) {
+              cubit.move(Direction.down);
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+                event.logicalKey == LogicalKeyboardKey.keyA) {
+              cubit.move(Direction.left);
+            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+                event.logicalKey == LogicalKeyboardKey.keyD) {
+              cubit.move(Direction.right);
+            } else if (event.logicalKey == LogicalKeyboardKey.keyR) {
+              cubit.restart();
             }
-          });
+          }
+        },
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: GameWidget.controlled(
+                    gameFactory: () =>
+                        FlappyBirdGame(context.read<GameInputCubit>()),
+                  ),
+                ),
 
-          return Scaffold(
-            body: KeyboardListener(
-              focusNode: focusNode,
-              autofocus: true,
-              onKeyEvent: (event) {
-                if (event is KeyDownEvent) {
-                  final cubit = context.read<GameInputCubit>();
-                  if (event.logicalKey == LogicalKeyboardKey.space) {
-                    cubit.jump();
-                  } else if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
-                      event.logicalKey == LogicalKeyboardKey.keyW) {
-                    cubit.move(Direction.up);
-                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                      event.logicalKey == LogicalKeyboardKey.keyS) {
-                    cubit.move(Direction.down);
-                  } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-                      event.logicalKey == LogicalKeyboardKey.keyA) {
-                    cubit.move(Direction.left);
-                  } else if (event.logicalKey ==
-                          LogicalKeyboardKey.arrowRight ||
-                      event.logicalKey == LogicalKeyboardKey.keyD) {
-                    cubit.move(Direction.right);
-                  } else if (event.logicalKey == LogicalKeyboardKey.keyR) {
-                    cubit.restart();
-                  }
+                Expanded(child: SnakeGame()),
+                // Expanded(child: Container(color: Colors.green)),
+              ],
+            ),
+
+            BlocBuilder<GameInputCubit, GameInputState>(
+              builder: (context, state) {
+                if (state is GameInputGameOver) {
+                  return Positioned.fill(
+                    child: Image.asset(
+                      "assets/flappybird/sprites/game-over2.jpeg",
+                      fit: BoxFit.fill,
+                    ),
+                  );
                 }
+                return SizedBox.shrink();
               },
-              child: Stack(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: GameWidget.controlled(
-                            gameFactory: () =>
-                                FlappyBirdGame(context.read<GameInputCubit>()),
-                          ),
+            ),
+            BlocBuilder<GameInputCubit, GameInputState>(
+              builder: (context, state) {
+                if (state is GameInputGameOver) {
+                  final totalScore = state.flappyBirdScore + state.snakeScore;
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 120.0),
+                      child: Text(
+                        'SCORE : $totalScore',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 140,
+                          fontFamily: "upheav",
+                          letterSpacing: 8,
+                          // shadows: [
+                          //   Shadow(
+                          //     blurRadius: 10.0,
+                          //     color: Colors.black,
+                          //     offset: Offset(3.0, 3.0),
+                          //   ),
+                          // ],
                         ),
                       ),
-                      Expanded(child: SnakeGame()),
-                      // Expanded(child: Container(color: Colors.green)),
-                    ],
-                  ),
-                  Positioned(
-                    right: 12,
-                    bottom: 12,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        iconSize: 36,
-                        padding: const EdgeInsets.all(12),
-                        constraints: const BoxConstraints(),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      ),
                     ),
-                  ),
-                ],
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  iconSize: 36,
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

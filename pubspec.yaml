@@ -36,3 +36,8 @@ flutter:
     - assets/flappybird/audios/
     - assets/flappybird/sprites/
 
+  fonts:
+    - family: upheav
+      fonts:
+        - asset: assets/fonts/upheavtt.ttf
+

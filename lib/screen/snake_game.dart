@@ -153,6 +153,10 @@ class _SnakeGameState extends State<SnakeGame> {
       isPlaying = false;
     });
     _gameTimer?.cancel();
+    context.read<GameInputCubit>().gameOver(
+      flappyBirdScore: context.read<GameInputCubit>().flappyBirdScore,
+      snakeScore: snake.length - 4,
+    );
   }
 
   void restartGame() {
@@ -183,6 +187,13 @@ class _SnakeGameState extends State<SnakeGame> {
           }
         } else if (state is GameInputRestart) {
           restartGame();
+        } else if (state is GameInputGameOver) {
+          if (isPlaying) {
+            setState(() {
+              isPlaying = false;
+            });
+            _gameTimer?.cancel();
+          }
         }
       },
       child: Container(

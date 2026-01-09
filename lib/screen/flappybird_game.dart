@@ -139,6 +139,11 @@ class FlappyBirdGame extends FlameGame
         _jumpOrRestart();
       } else if (state is GameInputRestart) {
         resetGame();
+      } else if (state is GameInputGameOver) {
+        if (!_birdComponent.isDead) {
+          FlameAudio.bgm.pause();
+          _birdComponent.isDead = true;
+        }
       }
     });
 
@@ -196,6 +201,8 @@ class FlappyBirdGame extends FlameGame
       [ParallaxImageData("background-day.png")],
       baseVelocity: Vector2(5, 0),
       images: images,
+      alignment: Alignment.topLeft,
+      fill: LayerFill.height,
     );
     add(bgComponent);
 
@@ -286,11 +293,11 @@ class FlappyBirdGame extends FlameGame
   final _pipes = [];
   final _bonusZones = [];
   createPipe() {
-    const pipeSpace = 300.0;
-    const minPipeHeight = 120.0;
-    const gapHeight = 220.0;
-    const baseHeight = 112.0;
-    const gapMaxRandomRange = 300;
+    const pipeSpace = 340.0;
+    const minPipeHeight = 90.0;
+    const gapHeight = 360.0;
+    const baseHeight = 100.0;
+    const gapMaxRandomRange = 360;
     var lastPipePos = _pipes.lastOrNull?.position.x ?? size.x - pipeSpace;
     lastPipePos += pipeSpace;
 
@@ -360,8 +367,13 @@ class FlappyBirdGame extends FlameGame
 
   gameOver() {
     if (!_birdComponent.isDead) {
+      FlameAudio.bgm.pause();
       FlameAudio.play("die.wav");
       _birdComponent.isDead = true;
+      inputCubit.gameOver(
+        flappyBirdScore: _birdComponent.score,
+        snakeScore: inputCubit.snakeScore,
+      );
     }
   }
 
@@ -385,5 +397,7 @@ class FlappyBirdGame extends FlameGame
       element.removeFromParent();
     }
     _bonusZones.clear();
+
+    FlameAudio.bgm.resume();
   }
 }
