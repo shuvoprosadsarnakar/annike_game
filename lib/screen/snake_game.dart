@@ -277,7 +277,7 @@ class _SnakeGameState extends State<SnakeGame> {
                     // Focus handled by parent
                   },
                   child: Container(
-                    color: Colors.black,
+                    color: Colors.transparent,
                     child: GridView.builder(
                       padding: EdgeInsets.zero,
                       physics: const NeverScrollableScrollPhysics(),
@@ -299,13 +299,13 @@ class _SnakeGameState extends State<SnakeGame> {
                         }
 
                         if (snake.first[0] == x && snake.first[1] == y) {
-                          color = Colors.black; // Snake head
+                          color = const Color(0xFF00C1D1); // Snake head
                         } else if (isSnakeBody) {
-                          color = Colors.black38; // Snake body
+                          color = const Color(0xFF00EFFF); // Snake body
                         } else if (food[0] == x && food[1] == y) {
-                          color = Colors.amber; // Food
+                          color = const Color(0xFFFC1838); // Food
                         } else {
-                          color = Colors.white60; // Background
+                          color = const Color(0xFFFF93A2); // Background
                         }
 
                         return Container(
