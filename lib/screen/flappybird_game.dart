@@ -127,6 +127,7 @@ class FlappyBirdGame extends FlameGame
   late PositionComponent _pipeLayer;
   late ResetButton _resetButton;
   bool _showResetButton = false;
+  bool _gameOverCalled = false;
   StreamSubscription? _inputSubscription;
 
   @override
@@ -165,6 +166,7 @@ class FlappyBirdGame extends FlameGame
       updatePipes(dt);
       updateScoreLabel();
     } else if (!_showResetButton) {
+      gameOver(); // Ensure game over is called for pipe collisions
       _showResetButton = true;
       _resetButton.position = Vector2(size.x * 0.5, size.y * 0.5);
       add(_resetButton);
@@ -367,7 +369,8 @@ class FlappyBirdGame extends FlameGame
   }
 
   gameOver() {
-    if (!_birdComponent.isDead) {
+    if (!_gameOverCalled) {
+      _gameOverCalled = true;
       FlameAudio.bgm.pause();
       FlameAudio.play("die.wav");
       _birdComponent.isDead = true;
@@ -384,6 +387,7 @@ class FlappyBirdGame extends FlameGame
       _showResetButton = false;
     }
 
+    _gameOverCalled = false;
     _birdComponent.isDead = false;
     _birdComponent.score = 0;
     _birdComponent.position = Vector2(size.x * 0.3, size.y * 0.5);
