@@ -3,7 +3,7 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches:
-      - main   # change if you use master
+      - main
 
 permissions:
   contents: write
@@ -20,14 +20,14 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.5'
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --release --base-href /annike_game/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
