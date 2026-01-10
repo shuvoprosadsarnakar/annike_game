@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:annike_game/cubit/game_input_cubit.dart';
+import 'package:video_player/video_player.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -13,6 +14,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late FocusNode _focusNode;
+  late VideoPlayerController _controller;
 
   @override
   void initState() {
@@ -21,11 +23,21 @@ class _MyHomePageState extends State<MyHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
+
+    _controller = VideoPlayerController.asset('assets/videos/intro.mp4');
+
+    _controller
+      ..setLooping(true)
+      ..initialize().then((_) {
+        if (mounted) setState(() {});
+        _controller.play();
+      });
   }
 
   @override
   void dispose() {
     _focusNode.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -60,10 +72,16 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset(
-                "assets/flappybird/sprites/horse-riding.gif",
-                fit: BoxFit.cover,
-              ),
+              child: _controller.value.isInitialized
+                  ? FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: _controller.value.size.width,
+                        height: _controller.value.size.height,
+                        child: VideoPlayer(_controller),
+                      ),
+                    )
+                  : const SizedBox(),
             ),
             Center(
               child: Column(
@@ -72,16 +90,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   InkWell(
                     onTap: _navigateToGame,
                     child: Container(
-                      height: 75,
-                      width: 200,
+                      padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.green,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
                         child: Text(
-                          "Start",
-                          style: TextStyle(color: Colors.white, fontSize: 45),
+                          "START",
+                          style: TextStyle(
+                            fontFamily: "upheav",
+                            color: Colors.black,
+                            fontSize: 90,
+                          ),
                         ),
                       ),
                     ),

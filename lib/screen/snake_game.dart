@@ -63,10 +63,12 @@ class _SnakeGameState extends State<SnakeGame> {
       [(squaresPerRow / 2).floor(), (squaresPerCol / 2).floor()],
     ];
 
-    // Snake body - adding 3 segments to make total length 4
+    // Snake body - adding 5 segments to make total length 6
     snake.add([snake.first[0], snake.first[1] + 1]);
     snake.add([snake.first[0], snake.first[1] + 2]);
     snake.add([snake.first[0], snake.first[1] + 3]);
+    snake.add([snake.first[0], snake.first[1] + 4]);
+    snake.add([snake.first[0], snake.first[1] + 5]);
 
     createFood();
     direction = Direction.up;
@@ -169,7 +171,7 @@ class _SnakeGameState extends State<SnakeGame> {
     _gameTimer?.cancel();
     context.read<GameInputCubit>().gameOver(
       flappyBirdScore: context.read<GameInputCubit>().flappyBirdScore,
-      snakeScore: snake.length - 4,
+      snakeScore: snake.length - 6,
     );
   }
 
@@ -235,7 +237,7 @@ class _SnakeGameState extends State<SnakeGame> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Score: ${snake.length - 4}',
+                    'Score: ${snake.length - 6}',
                     style: const TextStyle(color: Colors.white, fontSize: 24),
                   ),
                 ],
@@ -324,7 +326,7 @@ class _SnakeGameState extends State<SnakeGame> {
           ),
 
           // Game Over overlay
-          if (!isPlaying && snake.length > 4)
+          if (!isPlaying && snake.length > 6)
             Center(
               child: Container(
                 color: Colors.black54,

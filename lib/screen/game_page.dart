@@ -104,7 +104,7 @@ class _FlappyBirdGameState extends State<GamePage> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 120.0),
                       child: Text(
-                        'SCORE : $totalScore',
+                        'SCORE : ${totalScore.toString().padLeft(2, '0')}',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 140,
