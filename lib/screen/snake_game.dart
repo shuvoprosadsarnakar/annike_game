@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:annike_game/cubit/game_input_cubit.dart';
+import 'package:video_player/video_player.dart';
 
 enum Direction { up, down, left, right }
 
@@ -29,14 +30,27 @@ class _SnakeGameState extends State<SnakeGame> {
   var isPlaying = false;
   Timer? _gameTimer;
 
+  late VideoPlayerController _controller;
+
   @override
   void initState() {
     super.initState();
+    _controller = VideoPlayerController.asset(
+      'assets/videos/snake-background.mp4',
+    );
+
+    _controller
+      ..setLooping(true)
+      ..initialize().then((_) {
+        if (mounted) setState(() {});
+        _controller.play();
+      });
     startGame();
   }
 
   @override
   void dispose() {
+    _controller.dispose();
     _gameTimer?.cancel();
     super.dispose();
   }
@@ -196,70 +210,83 @@ class _SnakeGameState extends State<SnakeGame> {
           }
         }
       },
-      child: Container(
-        color: const Color(0xFF343434),
-        child: Stack(
-          children: [
-            // Score display
-            Positioned(
-              top: 10,
-              left: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Score: ${snake.length - 4}',
-                      style: const TextStyle(color: Colors.white, fontSize: 24),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: _controller.value.isInitialized
+                ? FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
                     ),
-                  ],
-                ),
+                  )
+                : const SizedBox(),
+          ),
+
+          // Score display
+          Positioned(
+            top: 10,
+            left: 10,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Score: ${snake.length - 4}',
+                    style: const TextStyle(color: Colors.white, fontSize: 24),
+                  ),
+                ],
               ),
             ),
-
-            // Game board
-            Positioned.fill(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Container(
-                  margin: const EdgeInsets.all(60),
-                  child: GestureDetector(
-                    onVerticalDragUpdate: (details) {
-                      if (direction != Direction.up && details.delta.dy > 0) {
-                        setState(() {
-                          direction = Direction.down;
-                        });
-                      } else if (direction != Direction.down &&
-                          details.delta.dy < 0) {
-                        setState(() {
-                          direction = Direction.up;
-                        });
-                      }
-                    },
-                    onHorizontalDragUpdate: (details) {
-                      if (direction != Direction.left && details.delta.dx > 0) {
-                        setState(() {
-                          direction = Direction.right;
-                        });
-                      } else if (direction != Direction.right &&
-                          details.delta.dx < 0) {
-                        setState(() {
-                          direction = Direction.left;
-                        });
-                      }
-                    },
-                    onTap: () {
-                      // Focus handled by parent
-                    },
+          ),
+          // Game board
+          Positioned.fill(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                margin: const EdgeInsets.all(60),
+                child: GestureDetector(
+                  onVerticalDragUpdate: (details) {
+                    if (direction != Direction.up && details.delta.dy > 0) {
+                      setState(() {
+                        direction = Direction.down;
+                      });
+                    } else if (direction != Direction.down &&
+                        details.delta.dy < 0) {
+                      setState(() {
+                        direction = Direction.up;
+                      });
+                    }
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    if (direction != Direction.left && details.delta.dx > 0) {
+                      setState(() {
+                        direction = Direction.right;
+                      });
+                    } else if (direction != Direction.right &&
+                        details.delta.dx < 0) {
+                      setState(() {
+                        direction = Direction.left;
+                      });
+                    }
+                  },
+                  onTap: () {
+                    // Focus handled by parent
+                  },
+                  child: Container(
+                    color: Colors.black,
                     child: GridView.builder(
+                      padding: EdgeInsets.zero,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: squaresPerRow,
                       ),
                       itemCount: squaresPerRow * squaresPerCol,
                       itemBuilder: (BuildContext context, int index) {
-                        var color;
+                        Color color;
                         var x = index % squaresPerRow;
                         var y = (index / squaresPerRow).floor();
 
@@ -294,48 +321,48 @@ class _SnakeGameState extends State<SnakeGame> {
                 ),
               ),
             ),
+          ),
 
-            // Game Over overlay
-            if (!isPlaying && snake.length > 4)
-              Center(
-                child: Container(
-                  color: Colors.black54,
+          // Game Over overlay
+          if (!isPlaying && snake.length > 4)
+            Center(
+              child: Container(
+                color: Colors.black54,
 
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Game Over!',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Game Over!',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: restartGame,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 15,
                           ),
                         ),
-                        SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: restartGame,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 30,
-                              vertical: 15,
-                            ),
-                          ),
-                          child: Text(
-                            'Play Again',
-                            style: TextStyle(fontSize: 24, color: Colors.white),
-                          ),
+                        child: Text(
+                          'Play Again',
+                          style: TextStyle(fontSize: 24, color: Colors.white),
                         ),
-                        SizedBox(height: 10),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 10),
+                    ],
                   ),
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

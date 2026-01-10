@@ -88,7 +88,7 @@ class _FlappyBirdGameState extends State<GamePage> {
                 if (state is GameInputGameOver) {
                   return Positioned.fill(
                     child: Image.asset(
-                      "assets/flappybird/sprites/game-over2.jpeg",
+                      "assets/images/game-over2.jpeg",
                       fit: BoxFit.fill,
                     ),
                   );

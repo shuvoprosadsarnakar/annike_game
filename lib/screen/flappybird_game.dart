@@ -233,6 +233,7 @@ class FlappyBirdGame extends FlameGame
     ];
     final anim = SpriteAnimation.spriteList(redBirdSprites, stepTime: 0.2);
     _birdComponent = Player(animation: anim);
+    _birdComponent.size = Vector2(34 * 1.5, 24 * 1.5);
     add(_birdComponent);
   }
 

@@ -20,6 +20,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
+  video_player: ^2.10.1
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +36,8 @@ flutter:
   assets:
     - assets/flappybird/audios/
     - assets/flappybird/sprites/
+    - assets/videos/    
+    - assets/images/
 
   fonts:
     - family: upheav
